@@ -179,7 +179,7 @@ Incident Response  = Respons terstruktur saat insiden keamanan terjadi
 
 ---
 
-## TASK 1 — What Is Defensive Security
+## 1 — What Is Defensive Security
 
 Defensive Security adalah cabang keamanan siber yang berfokus pada **memahami apa yang perlu dilindungi** dan menerapkan langkah-langkah keamanan untuk mencegah, mendeteksi, dan memitigasi dampak dari potensi serangan. Berbeda dengan offensive security yang berusaha menerobos masuk, defensive security justru berusaha memastikan tidak ada yang bisa masuk tanpa izin — dan jika pun terjadi insiden, sistem sudah siap merespons.
 
@@ -191,7 +191,7 @@ Tujuan akhir dari defensive security bukan hanya mencegah serangan, tapi juga **
 
 ---
 
-## TASK 2 — Understanding Your Environment
+## 2 — Understanding Your Environment
 
 ### Mengapa Memahami Lingkungan Itu Penting
 
@@ -232,7 +232,7 @@ Berikut adalah komponen-komponen utama yang biasanya ada dalam infrastruktur kli
 
 ---
 
-## TASK 3 — Defending Your Environment
+## 3 — Defending Your Environment
 
 ### The Defender Mindset
 
@@ -261,7 +261,7 @@ Berikut adalah pertahanan yang diterapkan untuk tiap komponen infrastruktur:
 
 ---
 
-## TASK 4 — Where to Go From Here
+## 4 — Where to Go From Here
 
 ### Terminologi Kunci yang Wajib Dikuasai
 
