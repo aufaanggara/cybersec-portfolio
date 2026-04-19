@@ -1,6 +1,6 @@
 # [Archetype] — [SQL]
 
-**Date:** 2025-xx-xx
+**Date:** 2025-04-19
 **Platform:** HackTheBox
 **Difficulty:** Very Easy
 **Category:** OS 
