@@ -8,7 +8,7 @@
 ---
 
 ## Target
-Windows server dengan dua service utama yang terbuka: SMB lama (Port 139 Net BIOS)SMB modern (Port 445) dan Microsoft SQL server (Port 1433). Skenario kecerobohan menyimpan kredensial database di dalam file konfigurasi yang bisa diakses public melalui SMB share, lalu SQL server dikonfigurasi sedemikian rupa dengan fitur berbahaya yang memungkinkan eksekusi command windows langsung dari query SQL.
+Windows server dengan dua service utama yang terbuka: SMB lama (Port 139 Net BIOS) SMB modern (Port 445) dan Microsoft SQL server (Port 1433). Skenario kecerobohan menyimpan kredensial database di dalam file konfigurasi yang bisa diakses public melalui SMB share, lalu SQL server dikonfigurasi sedemikian rupa dengan fitur berbahaya yang memungkinkan eksekusi command windows langsung dari query SQL.
 
 ## Vulnerability
 - SMB Missconfiguration - share backups bisa diakses tanpa autentikasi (anonymus/guest)
@@ -33,19 +33,39 @@ Scan semua port untuk mengetahui port & service apa yang berjalan di target
 # command yang kamu pakai
 nmap -sV -sC target-ip
 ```
-> ![nmap](image.png)
+- sV - Deteksi versi service
+- sC - Jalankan default scripts
+- T4 - Speed scan
 
-### Step 2 — [Nama step, contoh: Finding the Vulnerability]
-Jelaskan apa yang kamu temuin.
-```
-[output atau payload yang relevan]
-```
+> ![nmap](image-2.png)
 
-### Step 3 — [Nama step, contoh: Exploitation]
-Jelaskan cara eksploitnya.
+### Step 2 — [SMB Enumeration]
+List semua share yang tersedia di target menggunakan anonymous login.
 ```bash
-# command eksploit
+smbclient -N -L target-ip 
 ```
+
+- -N - No password (anonymous)
+- -L - List semua share
+
+> ![smb enumeration](image-3.png)
+
+Share backups adalah custom share (non-default) yang sering misconfigured dan bisa diakses tanpa password. Share default seperti ADMIN dan C otomatis di protect oleh windows dan hanya bisa diakses administrator.
+
+### Step 3 — [SMB Share & Download File]
+Masuk ke share backups dan download file yang ada.
+```bash
+smbclient -N \\\\ip-target\\sharename
+```
+
+- D - Directory : menggunakan cd
+- AR - File (Achive, Read-only) : menggunakan get
+
+> ![smb-share](image-5.png)
+
+File .dtsConfig adalah file konfigurasi SSIS (SQL Server Integration Services) yang menyimpan connection string — termasuk username dan password dalam plaintext. Nama prod menandakan ini adalah konfigurasi production (sistem aktif, bukan test).
+
+> ![cat prod](image-6.png)
 
 ### Step 4 — [Nama step, contoh: Post Exploitation / Getting the Flag]
 Apa yang kamu dapetin setelah berhasil masuk.
