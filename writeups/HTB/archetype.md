@@ -8,12 +8,12 @@
 ---
 
 ## Target
-Jadi target disini adalah OS Windows
-Deskripsi singkat targetnya — ini web app apa, OS apa, atau mesin apa.
+Windows server dengan dua service utama yang terbuka: SMB lama (Port 139 Net BIOS)SMB modern (Port 445) dan Microsoft SQL server (Port 1433). Skenario kecerobohan menyimpan kredensial database di dalam file konfigurasi yang bisa diakses public melalui SMB share, lalu SQL server dikonfigurasi sedemikian rupa dengan fitur berbahaya yang memungkinkan eksekusi command windows langsung dari query SQL.
 
 ## Vulnerability
-Celah yang ditemukan pertama ada SMB yang 
-Celah apa yang ditemukan dan kenapa celah itu bisa ada.
+- SMB Missconfiguration - share backups bisa diakses tanpa autentikasi (anonymus/guest)
+- Credentials in Config File
+- xp_cmdshell abuse + powershell history
 
 ## Tools Used
 - smbclient
