@@ -12,23 +12,28 @@ Windows server dengan dua service utama yang terbuka: SMB lama (Port 139 Net BIO
 
 ## Vulnerability
 - SMB Missconfiguration - share backups bisa diakses tanpa autentikasi (anonymus/guest)
-- Credentials in Config File
-- xp_cmdshell abuse + powershell history
+- Credentials in Config File - File prod.dtsConfig nyimpen username & password SQL server dalam plaintext dialam connection string
+- xp_cmdshell abuse + powershell history - SQL server bisa dimanfaatkan untuk aktifin xp_cmdshell & jalanin command windows. Setelah masuk lalu cek powershell history dan terdapat kredensial administrator dalam plaintext
 
 ## Tools Used
-- smbclient
-- Tool 2 (contoh: Burp Suite)
-- WinPeas
+- nmap - port scanning & service enumeration
+- smbclient - SMB share enumeration & file download
+- impacket-mssqlclient - koneksi ke microsoft sql server 
+- python3 http.server - HTTP server untuk serve reverse shell script
+- netcat (nc) - listener untuk nangkap reverse shell 
+- powershell - reverse shell script di sisi target
+- WinPEAS - windows privilege escalation enumeration
+- impacket-psexec - remote login sebagai administrator 
 
 ## Exploitation Steps
 
-### Step 1 — [Nama step, contoh: Reconnaissance]
-Jelaskan apa yang kamu lakuin dan kenapa.
+### Step 1 — [Reconnaissance - Nmap scan]
+Scan semua port untuk mengetahui port & service apa yang berjalan di target
 ```bash
 # command yang kamu pakai
 nmap -sV -sC target-ip
 ```
-> [Taruh screenshot di sini kalau ada]
+> ![nmap](image.png)
 
 ### Step 2 — [Nama step, contoh: Finding the Vulnerability]
 Jelaskan apa yang kamu temuin.
