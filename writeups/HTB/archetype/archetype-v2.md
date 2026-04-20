@@ -268,14 +268,14 @@ dir
 type root.txt
 ```
 
-Flag: `b91ccec3**********************`
+Flag: 
 
 ---
 
 ## Proof
 ```
-User Flag : 3e7b102e78218**********************
-Root Flag : b91ccec3**********************
+User Flag : 
+Root Flag : 
 ```
 
 ---
