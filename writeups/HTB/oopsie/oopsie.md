@@ -210,3 +210,204 @@ Root Flag: [ada di /root/root.txt]
 - Upgrade webshell ke reverse shell yang stabil (netcat/bash reverse shell)
 - Teknik enumerasi privilege escalation yang lebih sistematis (LinPEAS, sudo -l, cron jobs)
 - Cara sanitasi input yang benar untuk mencegah Path Traversal
+
+# Oopsie — Database Exploration & Post Exploitation
+
+**Date:** 2026-04-30
+**Platform:** Hack The Box — Starting Point
+**Difficulty:** Very Easy
+**Category:** Web / Database / Post Exploitation
+
+---
+
+## Target
+
+MegaCorp Automotive — setelah berhasil masuk sebagai user `robert` via SSH, ditemukan kredensial database MySQL di file konfigurasi aplikasi web. Eksplorasi database dilakukan sebagai bagian dari post exploitation untuk memaksimalkan data yang bisa diakses.
+
+## Vulnerability
+
+1. **Credential Exposure in Config File** — kredensial database tersimpan dalam plaintext di file konfigurasi PHP yang dapat dibaca via webshell.
+2. **Excessive Database Privileges** — user `robert` memiliki akses penuh ke database aplikasi, memungkinkan pembacaan seluruh data.
+3. **Sensitive Data Exposure (Critical)** — database menyimpan PII (nama & email) klien bisnis, data akun internal, dan informasi harga kendaraan tanpa enkripsi.
+
+## Tools Used
+
+- SSH
+- MySQL Client
+- Webshell (PHP)
+
+---
+
+## Exploitation Steps
+
+### Step 1 — Menemukan Kredensial Database
+
+Setelah mendapatkan akses webshell, eksplorasi struktur folder web server dilakukan untuk menemukan file konfigurasi. File `db.php` ditemukan di dalam folder aplikasi login.
+
+Karena `cat` tidak bisa menampilkan konten file PHP via webshell (file dieksekusi bukan ditampilkan), digunakan perintah `od` untuk membaca raw content:
+
+```
+?cmd=od+-c+/var/www/html/cdn-cgi/login/db.php
+```
+
+Dari output ditemukan:
+- **Username:** `robert`
+- **Password:** (tersimpan plaintext di config file)
+- **Database:** `garage`
+- **Host:** `localhost`
+
+---
+
+### Step 2 — Koneksi ke Database
+
+Setelah login via SSH sebagai `robert`, koneksi ke MySQL menggunakan kredensial yang ditemukan:
+
+```bash
+mysql -u robert -p'[PASSWORD]' garage
+```
+
+**Penjelasan switch:**
+
+| Switch | Fungsi |
+|--------|--------|
+| `-u` | username database |
+| `-p` | password (langsung nempel tanpa spasi) |
+| `-h` | host target (default: localhost) |
+| `-P` | port (default: 3306) |
+| `garage` | nama database yang langsung dibuka |
+
+> ⚠️ Warning "insecure" muncul karena password terlihat di command line. Di real pentest gunakan `-p` saja lalu input password secara manual.
+
+---
+
+### Step 3 — Enumerasi Database
+
+Lihat semua tabel yang ada di database `garage`:
+
+```sql
+SHOW TABLES;
+```
+
+**Hasil:**
+```
++------------------+
+| Tables_in_garage |
++------------------+
+| accounts         |
+| branding         |
+| clients          |
++------------------+
+```
+
+---
+
+### Step 4 — Eksplorasi Tabel accounts
+
+Lihat struktur tabel terlebih dahulu:
+
+```sql
+DESCRIBE accounts;
+```
+
+**Struktur:**
+```
+id     | int(11)      
+access | int(11)      
+name   | varchar(100) 
+email  | varchar(100) 
+```
+
+Ambil semua data:
+
+```sql
+SELECT * FROM accounts;
+```
+
+**Data yang ditemukan:** 6 akun internal termasuk super admin, lengkap dengan Access ID dan email korporat.
+
+---
+
+### Step 5 — Eksplorasi Tabel clients
+
+```sql
+DESCRIBE clients;
+SELECT * FROM clients;
+```
+
+**Data yang ditemukan:** 4 data klien bisnis lengkap dengan nama perusahaan dan email — ini adalah **PII (Personally Identifiable Information)** yang seharusnya dilindungi.
+
+---
+
+### Step 6 — Eksplorasi Tabel branding
+
+```sql
+DESCRIBE branding;
+SELECT * FROM branding;
+```
+
+**Data yang ditemukan:** Model dan harga kendaraan internal — informasi bisnis sensitif yang seharusnya tidak dapat diakses publik.
+
+---
+
+## Proof
+
+```
+Data sensitif berhasil diakses:
+- 6 akun internal sistem (termasuk super admin)
+- 4 data klien bisnis + email (PII)
+- Data harga internal kendaraan
+```
+
+---
+
+## Severity Assessment
+
+| Temuan | Severity | Alasan |
+|--------|----------|--------|
+| Kredensial DB di config file | High | Plaintext credential exposure |
+| Akses penuh ke database | Critical | Seluruh data bisa dibaca/diubah |
+| Bocornya data PII klien | Critical | Pelanggaran privasi, potensi denda GDPR |
+| Bocornya data akun internal | Critical | Dapat digunakan untuk serangan lanjutan |
+| Bocornya harga internal | High | Data bisnis sensitif kompetitor bisa manfaatkan |
+
+**Bug Bounty Priority:**
+```
+Credential in config file  → P2 (High)
+Database dump + PII        → P1 (Critical) 🔴
+Full DB access             → P1 (Critical) 🔴
+```
+
+---
+
+## SQL Commands Cheatsheet
+
+```sql
+SHOW DATABASES;              -- lihat semua database
+SHOW TABLES;                 -- lihat semua tabel di database aktif
+DESCRIBE nama_tabel;         -- lihat struktur/kolom tabel
+SELECT * FROM nama_tabel;    -- tampilkan semua data tabel
+SELECT kolom FROM tabel;     -- tampilkan kolom tertentu saja
+WHERE kolom = 'nilai';       -- filter data
+EXIT;                        -- keluar dari MySQL
+```
+
+---
+
+## Lessons Learned
+
+**Hal baru yang dipelajari:**
+- Kredensial database yang tersimpan plaintext di config file adalah temuan High/Critical tersendiri — terpisah dari vulnerability upload/RCE
+- `od -c` bisa digunakan untuk membaca raw content file PHP yang tidak bisa dibaca dengan `cat` via webshell
+- Dalam real pentest, post exploitation database wajib dilakukan untuk memaksimalkan scope temuan dan bukti dampak nyata
+- Data PII yang bocor otomatis masuk Critical karena implikasi hukum (GDPR, UU PDP)
+- Perbedaan CTF vs Real Pentest: di CTF cukup dapat flag, di real pentest harus dokumentasi semua data yang bisa diakses sebagai bukti dampak
+
+**Kesalahan yang dibuat:**
+- Awalnya mencoba akses database via webshell — lebih efisien langsung dari SSH setelah dapat kredensial
+- Lupa bahwa `cat` tidak bisa baca file PHP via webshell karena PHP dieksekusi server
+
+**Yang ingin dieksplore lebih lanjut:**
+- Teknik SQL Injection untuk akses database tanpa kredensial
+- Cara dump seluruh database ke file lokal (`mysqldump`)
+- Cracking password hash jika database menyimpan hash password
+- Pivoting ke sistem lain menggunakan data yang ditemukan di database
