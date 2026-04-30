@@ -219,4 +219,193 @@ Foothold = akses awal ke sistem (contoh: dapat shell www-data)
 Privesc  = Privilege Escalation → naik dari user biasa ke root
 ```
 
-Semua yang perlu dihapal dari Oopsie ada di sini! Mau lanjut ke machine berikutnya? 🚀
+```
+=== HTB Oopsie - Database & Post Exploitation - Resume Materi ===
+[30 Apr 2026]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 POST EXPLOITATION — MINDSET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CTF      : Dapat flag = selesai
+Real     : Dapat akses = BARU MULAI
+           → Eksplorasi semua data yang bisa diakses
+           → Dokumentasi semua temuan sebagai bukti dampak
+           → Database, file sensitif, kredensial lain = wajib dicari
+
+Prinsip  : Setiap kredensial yang ditemukan → COBA ke semua service!
+           Password db.php → coba SSH → coba MySQL → coba service lain
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 MENEMUKAN KREDENSIAL DI CONFIG FILE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+File konfigurasi PHP sering nyimpan kredensial database dalam plaintext
+Lokasi umum yang wajib dicek :
+  /var/www/html/                    → root web server Apache
+  /var/www/html/cdn-cgi/login/      → folder aplikasi login
+  /var/www/html/config.php          → file konfigurasi umum
+  /var/www/html/db.php              → file koneksi database
+  /var/www/html/includes/           → folder include/library
+
+Cara baca file PHP via webshell :
+  cat     → GAGAL (file dieksekusi server, bukan ditampilkan)
+  strings → baca string dari binary/file
+  od -c   → dump file sebagai karakter (PALING RELIABLE)
+  wc -c   → hitung ukuuaran file (cek apakah kosong)
+
+Contoh output od -c :
+  0000000 < ? p h p \n $ c o n n =
+  → Baca tiap karakter, abaikan angka di kiri (itu offset byte)
+  → Gabungkan karakter → ketemu username & password
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 MySQL — KONEKSI & SWITCH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Perintah : mysql -u [user] -p'[password]' [database]
+
+Switch   :
+  -u        = username database
+  -p        = password (langsung nempel tanpa spasi!)
+  -h        = host target (default: localhost)
+  -P        = port (default: 3306)
+  -e "SQL"  = eksekusi query langsung tanpa masuk prompt
+  [db]      = nama database yang langsung dibuka (di akhir)
+
+Contoh   :
+  mysql -u robert -p'[pass]' garage         → masuk ke db garage
+  mysql -u root -p                           → input password manual (aman)
+  mysql -u user -p -h 10.10.10.1            → konek ke remote host
+
+Warning "insecure" = normal, muncul karena password kelihatan di command
+Solusi aman di real pentest → pakai -p saja, lalu input manual
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 SQL COMMANDS — WAJIB HAPAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Navigasi :
+  SHOW DATABASES;               → lihat semua database
+  USE nama_database;            → pindah ke database lain
+  SHOW TABLES;                  → lihat semua tabel di database aktif
+
+Eksplorasi :
+  DESCRIBE nama_tabel;          → lihat struktur kolom tabel
+  SELECT * FROM nama_tabel;     → tampilkan SEMUA data tabel
+  SELECT kolom FROM tabel;      → tampilkan kolom tertentu saja
+
+Filter & kondisi :
+  SELECT * FROM tabel WHERE kolom = 'nilai';   → filter data
+  SELECT * FROM tabel LIMIT 5;                 → ambil 5 data saja
+  SELECT * FROM tabel ORDER BY kolom;          → urutkan data
+
+Lain-lain :
+  EXIT;   atau  \q              → keluar dari MySQL prompt
+
+Urutan logis eksplorasi database :
+  1. SHOW TABLES            → tau ada tabel apa
+  2. DESCRIBE tabel         → tau kolom apa yang ada
+  3. SELECT * FROM tabel    → ambil semua datanya
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 DATA YANG DICARI SAAT POST EXPLOITATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Prioritas pencarian di database :
+  1. Tabel users/accounts    → username, password (hash/plaintext)
+  2. Tabel customers/clients → PII (nama, email, telepon, alamat)
+  3. Tabel config/settings   → API key, token, kredensial lain
+  4. Tabel logs              → aktivitas user, riwayat akses
+  5. Semua tabel lain        → data bisnis sensitif
+
+Kenapa PII = Critical :
+  → Pelanggaran privasi user/klien
+  → Denda GDPR bisa jutaan dollar (eropa)
+  → Denda UU PDP (Indonesia)
+  → Reputasi perusahaan hancur
+  → Data bisa dipakai untuk phishing/social engineering
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 SEVERITY RATING — CVSS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Critical (9.0-10.0) → Dampak maksimal, eksploitasi mudah
+High     (7.0-8.9)  → Dampak besar, butuh sedikit skill
+Medium   (4.0-6.9)  → Dampak terbatas, ada mitigasi
+Low      (0.1-3.9)  → Dampak kecil, susah dieksploit
+Info     (0.0)      → Temuan informatif, bukan vulnerability
+
+Contoh tiap level :
+  Critical → RCE tanpa auth, SQL injection bocorkan semua DB,
+             data breach PII ribuan user, auth bypass ke admin
+  High     → RCE butuh auth dulu, IDOR expose data user lain,
+             broken access control, SUID privesc
+  Medium   → XSS butuh interaksi user, versi software outdated,
+             cookie tanpa HttpOnly/Secure, directory listing aktif
+  Low      → Banner grabbing, missing security headers,
+             password policy lemah, error message verbose
+  Info     → Port terbuka tapi tidak vulnerable,
+             teknologi terdeteksi, SSL certificate info
+
+Rumus penentu severity :
+  Mudah dieksploit  + Dampak besar    = Critical
+  Butuh kondisi     + Dampak besar    = High
+  Butuh interaksi   + Dampak terbatas = Medium
+  Susah dieksploit  + Dampak kecil    = Low
+
+Dua pertanyaan kunci :
+  1. Seberapa MUDAH dieksploit?
+  2. Seberapa BESAR dampaknya?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 BUG BOUNTY PRIORITY (P1-P5)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+P1 Critical → $10,000 - $100,000+
+  Contoh : RCE di production, account takeover tanpa interaksi,
+           akses semua data user tanpa login
+
+P2 High     → $3,000 - $10,000
+  Contoh : IDOR akses data user lain, privilege escalation ke admin,
+           authentication bypass, RCE butuh auth dulu
+
+P3 Medium   → $500 - $3,000
+  Contoh : CSRF ubah data akun, Stored XSS di halaman ramai,
+           Reflected XSS butuh klik link (social engineering)
+
+P4 Low      → $100 - $500
+  Contoh : Open redirect, rate limiting tidak ada di login,
+           missing security headers
+
+P5 Info     → $0 - $100 (atau swag)
+  Contoh : Typo di halaman web, best practice tidak diikuti,
+           missing headers minor
+
+XSS — bedanya Stored vs Reflected :
+  Stored XSS   → tersimpan di DB, otomatis jalan saat halaman dibuka
+                 = P2 High (kena semua pengunjung)
+  Reflected XSS → butuh korban klik link khusus dulu
+                 = P3 Medium (ada barrier social engineering)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 OOPSIE — SEVERITY SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Cookie Manipulation       → P2 High
+IDOR                      → P2 High
+File Upload + RCE         → P1 Critical
+Database dump + PII       → P1 Critical
+SUID Privesc              → P1 Critical
+Credential di config file → P2 High
+
+Total estimasi bug bounty jika real program → $50,000+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 ISTILAH PENTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PII          = Personally Identifiable Information
+               data yang bisa identifikasi seseorang (nama, email, dll)
+GDPR         = General Data Protection Regulation
+               regulasi privasi data di Eropa, denda jutaan dollar
+UU PDP       = Undang-Undang Perlindungan Data Pribadi (Indonesia)
+Data Breach  = kebocoran data sensitif ke pihak yang tidak berwenang
+CVSS         = Common Vulnerability Scoring System
+               sistem penilaian severity vulnerability (0.0-10.0)
+Hash         = enkripsi satu arah password (MD5, SHA1, bcrypt)
+Plaintext    = password tersimpan tanpa enkripsi — sangat berbahaya!
+Config File  = file konfigurasi aplikasi, sering berisi kredensial
+Post Expl.   = aktivitas setelah dapat akses awal ke sistem target
+```
