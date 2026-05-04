@@ -1,4 +1,4 @@
-# 👾 Cybersecurity Portfolio — Muhammad Falah Aufa Anggara
+# Cybersecurity Portfolio — Muhammad Falah Aufa Anggara
 
 > "Don't just study security. Break things, fix things, understand why."
 
@@ -6,16 +6,16 @@ Mahasiswa Universitas Gadjah Mada yang aktif membangun skill di bidang offensive
 
 ---
 
-## 🧠 About Me
+## About Me
 
-- 🎓 Universitas Gadjah Mada
-- 🔭 Currently learning: Web Hacking, Network Exploitation, Active Directory
-- 🛠️ Building: Home Lab (Kali Linux + Metasploitable + DVWA)
-- 🎯 Goal: Penetration Tester
+- Universitas Gadjah Mada
+- Currently learning: Web Hacking, Network Exploitation, Active Directory
+- Building: Home Lab (Kali Linux + Metasploitable + DVWA)
+- Goal: Penetration Tester
 
 ---
 
-## 🔧 Skills
+## Skills
 
 | Area | Tools & Techniques |
 |------|--------------------|
@@ -26,7 +26,7 @@ Mahasiswa Universitas Gadjah Mada yang aktif membangun skill di bidang offensive
 
 ---
 
-## 📝 Writeups
+## Writeups
 
 | Target | Category | Platform | Difficulty |
 |--------|----------|----------|------------|
@@ -34,21 +34,26 @@ Mahasiswa Universitas Gadjah Mada yang aktif membangun skill di bidang offensive
 
 ---
 
-## 🏆 Achievements
+## Achievements
 
 | Platform | Achievement |
 |----------|-------------|
-| TryHackMe | *(update with your rank/badge)* |
-| HackTheBox | *(update with your rank)* |
+| TryHackMe | *(comming soon | update with rank/badge)* |
+| HackTheBox | *(comming soon | update with rank)* |
 
 ---
 
-## 📂 Repo Structure
+## Repo Structure
 
 ```
 cybersec-portfolio/
 │
 ├── README.md
+├── materi/
+    ├── THM/
+    ├── HTB/
+    └── home-lab/
+├── tools/
 └── writeups/
     ├── THM/
     ├── HTB/
@@ -57,10 +62,10 @@ cybersec-portfolio/
 
 ---
 
-## 📫 Contact
+## Contact
 
-- GitHub: [github.com/username](https://github.com/username)
-- LinkedIn: *(optional)*
+- GitHub: [github.com/username](https://github.com/aufaanggara)
+- LinkedIn: -
 
 ---
 
