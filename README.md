@@ -50,9 +50,9 @@ cybersec-portfolio/
 │
 ├── README.md
 ├── materi/
-    ├── THM/
-    ├── HTB/
-    └── home-lab/
+|   ├── THM/
+|   ├── HTB/
+|   └── home-lab/
 ├── tools/
 └── writeups/
     ├── THM/
@@ -64,7 +64,7 @@ cybersec-portfolio/
 
 ## Contact
 
-- GitHub: [github.com/username](https://github.com/aufaanggara)
+- GitHub: [github.com/aufaanggara](https://github.com/aufaanggara)
 - LinkedIn: -
 
 ---
