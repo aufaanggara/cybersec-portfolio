@@ -50,9 +50,9 @@ cybersec-portfolio/
 │
 ├── README.md
 ├── materi/
-|   ├── THM/
-|   ├── HTB/
-|   └── home-lab/
+│   ├── THM/
+│   ├── HTB/
+│   └── home-lab/
 ├── tools/
 └── writeups/
     ├── THM/
