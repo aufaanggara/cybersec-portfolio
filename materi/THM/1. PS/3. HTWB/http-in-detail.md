@@ -368,4 +368,581 @@ Common ports HTTP services:
 5000 → Development server (Flask)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 CONTENT-TYPE UMUM (MIME TYPES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEXT:
+text/html              → HTML document
+text/plain             → Plain text
+text/css               → CSS stylesheet
+text/javascript        → JavaScript code
+text/csv               → CSV file
+
+APPLICATION:
+application/json       → JSON data (API responses)
+application/xml        → XML document
+application/pdf        → PDF file
+application/zip        → ZIP archive
+application/x-www-form-urlencoded → Form data (default POST)
+multipart/form-data    → Form dengan file upload
+
+IMAGE:
+image/jpeg             → JPEG image
+image/png              → PNG image
+image/gif              → GIF image
+image/svg+xml          → SVG vector image
+image/webp             → WebP image
+
+VIDEO/AUDIO:
+video/mp4              → MP4 video
+audio/mpeg             → MP3 audio
+audio/wav              → WAV audio
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 HTTP HEADER SECURITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Security Headers (Server → Client):
+
+Strict-Transport-Security (HSTS):
+  Fungsi : Paksa browser selalu pakai HTTPS
+  Contoh : Strict-Transport-Security: max-age=31536000
+  Benefit: Cegah downgrade attack ke HTTP
+
+X-Frame-Options:
+  Fungsi : Cegah clickjacking
+  Contoh : X-Frame-Options: DENY
+  Benefit: Website tidak bisa ditampilkan dalam iframe
+
+X-Content-Type-Options:
+  Fungsi : Cegah MIME sniffing
+  Contoh : X-Content-Type-Options: nosniff
+  Benefit: Browser harus ikuti Content-Type yang dideklarasi
+
+Content-Security-Policy (CSP):
+  Fungsi : Kontrol resource mana yang boleh dimuat
+  Contoh : Content-Security-Policy: default-src 'self'
+  Benefit: Cegah XSS attack
+
+X-XSS-Protection:
+  Fungsi : Aktifkan XSS filter browser (deprecated)
+  Contoh : X-XSS-Protection: 1; mode=block
+  Note   : Diganti dengan CSP yang lebih powerful
+
+Referrer-Policy:
+  Fungsi : Kontrol informasi referer yang dikirim
+  Contoh : Referrer-Policy: no-referrer
+  Benefit: Privacy protection
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 HTTP AUTHENTICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Basic Authentication:
+  Format : Authorization: Basic base64(username:password)
+  Contoh : Authorization: Basic YWRtaW46cGFzcw==
+  Kelemahan: Password encoded (BUKAN encrypted)
+             Mudah di-decode
+             Harus pakai HTTPS!
+
+Bearer Token:
+  Format : Authorization: Bearer <token>
+  Contoh : Authorization: Bearer eyJhbGc...
+  Kegunaan: API authentication, OAuth 2.0
+  Benefit : Token bisa di-revoke, ada expiry
+
+Digest Authentication:
+  Format : Authorization: Digest username="admin"...
+  Benefit: Password di-hash, lebih aman dari Basic
+  Jarang dipakai sekarang, diganti OAuth/JWT
+
+API Key:
+  Format : X-API-Key: abc123def456
+          atau di query: /api/data?api_key=abc123
+  Kegunaan: Simple API authentication
+  Kelemahan: Tidak ada expiry otomatis
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 CORS (Cross-Origin Resource Sharing)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Definisi : Mekanisme izinkan/blokir request dari domain berbeda
+Kenapa   : Browser block AJAX request ke domain lain (security)
+
+Origin = protocol + domain + port
+Contoh:
+- https://example.com:443  → 1 origin
+- http://example.com:80    → origin berbeda (protocol beda)
+- https://api.example.com  → origin berbeda (subdomain beda)
+
+Headers CORS:
+
+Request (Preflight):
+Origin: https://frontend.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: Content-Type
+
+Response:
+Access-Control-Allow-Origin: https://frontend.com
+Access-Control-Allow-Methods: GET, POST, PUT
+Access-Control-Allow-Headers: Content-Type
+Access-Control-Allow-Credentials: true
+Access-Control-Max-Age: 86400
+
+Wildcard berbahaya:
+Access-Control-Allow-Origin: *  ← JANGAN di production!
+Kenapa: Semua domain bisa akses API Anda
+
+Pentest tip:
+✓ Cek apakah CORS terlalu permissive
+✓ Test dengan Origin berbeda
+✓ Cek apakah credentials diizinkan + wildcard origin
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 CACHING MECHANISM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Cache-Control directives:
+
+no-store
+  → Jangan simpan cache SAMA SEKALI
+  Untuk: data sensitif, banking
+
+no-cache
+  → Boleh simpan tapi harus validasi dulu sebelum pakai
+  Untuk: data yang sering berubah
+
+public
+  → Boleh di-cache di shared cache (CDN, proxy)
+  Untuk: static assets (CSS, JS, images)
+
+private
+  → Hanya boleh di-cache di browser user
+  Untuk: data personal user
+
+max-age=3600
+  → Cache valid selama 3600 detik (1 jam)
+  Setelah itu harus request ulang
+
+must-revalidate
+  → Setelah expired, WAJIB revalidasi ke server
+
+Contoh kombinasi:
+Cache-Control: public, max-age=31536000, immutable
+→ File statis yang tidak akan pernah berubah (versioned assets)
+
+Cache-Control: private, no-cache, no-store, must-revalidate
+→ Data sangat sensitif (banking, medical)
+
+Cache-Control: public, max-age=3600, must-revalidate
+→ News article (cache 1 jam)
+
+ETag & Last-Modified:
+ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+Last-Modified: Tue, 05 May 2026 10:52:47 GMT
+→ Untuk conditional request (304 Not Modified)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 HTTP/2 PUSH & MULTIPLEXING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Server Push:
+  Server kirim resource SEBELUM diminta client
+  Contoh: Request HTML → server push CSS & JS sekalian
+  Benefit: Lebih cepat, mengurangi round-trip
+
+Multiplexing:
+  Multiple request/response paralel dalam 1 TCP connection
+  HTTP/1.1: 1 request → tunggu response → request lagi
+  HTTP/2  : kirim 10 request sekaligus → terima parallel
+
+Stream Prioritization:
+  Resource penting (CSS) dapat prioritas lebih tinggi
+  Resource tidak kritis (analytics) prioritas rendah
+
+Header Compression:
+  HPACK algorithm → kompres header
+  Benefit: Header sering berulang, kompresi hemat bandwidth
+
+Binary Protocol:
+  HTTP/1.1: text-based
+  HTTP/2  : binary-based → lebih efisien parsing
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 SESSION vs TOKEN AUTHENTICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SESSION-BASED (Cookie):
+1. User login → server buat session ID
+2. Session ID disimpan di cookie
+3. Server simpan session data di memory/database
+4. Setiap request → server lookup session ID
+
+Pros:
+✓ Session bisa di-revoke instant dari server
+✓ Data session tidak perlu dikirim tiap request
+✓ Built-in di banyak framework
+
+Cons:
+✗ Tidak scalable (butuh shared session storage)
+✗ Tidak cocok untuk microservices
+✗ CSRF vulnerability (butuh CSRF token)
+
+TOKEN-BASED (JWT):
+1. User login → server generate JWT token
+2. Token disimpan di localStorage/sessionStorage
+3. Setiap request → kirim token di Authorization header
+4. Server verify signature token (stateless)
+
+Pros:
+✓ Stateless → sangat scalable
+✓ Cocok untuk API & microservices
+✓ Cross-domain friendly
+✓ Mobile-friendly
+
+Cons:
+✗ Tidak bisa revoke sebelum expiry (kecuali pakai blacklist)
+✗ Token size lebih besar dari session ID
+✗ XSS vulnerability jika simpan di localStorage
+
+JWT Structure:
+header.payload.signature
+
+Contoh:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJ1c2VyIjoiYWRtaW4iLCJleHAiOjE2MjAw...
+SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 COMPRESSION ALGORITHMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+gzip:
+  Paling umum digunakan
+  Kompresi ratio: baik
+  Speed: cepat
+  Support: hampir semua browser
+
+deflate:
+  Jarang digunakan
+  Predecessor dari gzip
+  Support: legacy browser
+
+br (Brotli):
+  Modern algorithm dari Google
+  Kompresi ratio: TERBAIK (15-25% lebih kecil dari gzip)
+  Speed: lebih lambat saat compress, cepat saat decompress
+  Support: browser modern only
+  Cocok: static assets
+
+compress:
+  Deprecated
+  Jangan digunakan
+
+Request header:
+Accept-Encoding: gzip, deflate, br
+
+Response header:
+Content-Encoding: br
+
+Tip untuk pentest:
+✓ Cek apakah compression diaktifkan (performance issue)
+✓ Test BREACH attack (jika HTTPS + compression + secret di response)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 REDIRECT TYPES & SECURITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Redirect Status Codes:
+
+301 Moved Permanently:
+  Search engine update index
+  Browser cache redirect
+  Use case: domain migration
+
+302 Found (Temporary):
+  Search engine tidak update index
+  Browser tidak cache
+  Use case: maintenance redirect
+
+303 See Other:
+  Setelah POST, redirect ke GET
+  Use case: form submission
+
+307 Temporary Redirect:
+  Seperti 302 tapi preserve HTTP method
+  POST tetap POST setelah redirect
+
+308 Permanent Redirect:
+  Seperti 301 tapi preserve HTTP method
+
+Open Redirect Vulnerability:
+URL: /redirect?url=https://evil.com
+→ User dikira redirect internal, ternyata ke situs phishing
+
+Cara test:
+1. Cari parameter redirect/return/callback/next
+2. Isi dengan URL eksternal
+3. Cek apakah aplikasi validasi domain
+
+Secure redirect:
+✓ Whitelist domain yang diizinkan
+✓ Validasi URL dimulai dengan /
+✓ Gunakan indirect reference (ID bukan URL langsung)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 RATE LIMITING & THROTTLING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Response Headers:
+
+X-RateLimit-Limit: 100
+  → Maksimal request per window
+
+X-RateLimit-Remaining: 45
+  → Sisa quota request
+
+X-RateLimit-Reset: 1620000000
+  → Timestamp reset quota (Unix timestamp)
+
+Retry-After: 60
+  → Tunggu 60 detik sebelum retry
+
+Status code saat limit exceeded:
+429 Too Many Requests
+
+Strategi rate limiting:
+
+Fixed Window:
+  100 request per jam
+  Reset setiap jam tepat (misalnya jam 13:00, 14:00)
+
+Sliding Window:
+  100 request per 60 menit terakhir
+  Lebih smooth, tidak ada spike saat reset
+
+Token Bucket:
+  Bucket diisi token dengan rate tetap
+  Request consume token
+  Flexible untuk burst traffic
+
+Leaky Bucket:
+  Request masuk queue
+  Diproses dengan rate konstan
+  Smooth traffic
+
+Pentest tip:
+✓ Cek apakah ada rate limiting (brute force protection)
+✓ Test bypass: rotate IP, user-agent, cookies
+✓ Cek apakah limit per IP atau per user
+✓ Perhatikan header X-RateLimit untuk planning attack
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 HTTP METHOD TAMPERING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HTTP Verb Tampering:
+
+Skenario:
+DELETE /api/user/123 → 403 Forbidden (tidak punya akses)
+
+Bypass attempt:
+1. Ganti ke POST dengan header:
+   X-HTTP-Method-Override: DELETE
+   atau
+   X-Method-Override: DELETE
+
+2. Gunakan _method parameter:
+   POST /api/user/123?_method=DELETE
+
+3. Try alternative methods:
+   PATCH, PUT, HEAD, OPTIONS, TRACE
+
+Real case:
+GET /admin → 403 Forbidden
+POST /admin → 200 OK (bypass!)
+
+HEAD method:
+  Seperti GET tapi tidak return body
+  Berguna untuk cek resource exists tanpa download
+  Bisa bypass security check yang hanya cek body
+
+OPTIONS method:
+  Tanya server method apa yang diizinkan
+  Response: Allow: GET, POST, PUT, DELETE
+  Info disclosure: tahu method available
+
+TRACE method:
+  Echo back request yang diterima server
+  Vulnerability: HTTP TRACE XSS
+  Seharusnya disabled!
+
+Pentest checklist:
+✓ Test semua HTTP methods (bukan hanya GET/POST)
+✓ Cek method override headers
+✓ Cari endpoint yang tidak validasi method properly
+✓ Test TRACE untuk XSS
+✓ Gunakan OPTIONS untuk recon
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 CHUNKED TRANSFER ENCODING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Kenapa chunked encoding:
+- Server tidak tahu Content-Length di awal
+- Streaming response (live data)
+- Server-Sent Events (SSE)
+
+Header:
+Transfer-Encoding: chunked
+
+Format:
+[size in hex]\r\n
+[data]\r\n
+[size in hex]\r\n
+[data]\r\n
+0\r\n
+\r\n
+
+Contoh:
+4\r\n
+Wiki\r\n
+5\r\n
+pedia\r\n
+0\r\n
+\r\n
+
+Result: "Wikipedia"
+
+HTTP Request Smuggling:
+Vulnerability saat proxy & backend berbeda parsing chunked
+Content-Length: 49
+Transfer-Encoding: chunked
+
+→ Proxy pakai Content-Length, Backend pakai Transfer-Encoding
+→ Request bisa "diselundupkan" (smuggling)
+
+Attack vector:
+CL.TE: Proxy pakai CL, Backend pakai TE
+TE.CL: Proxy pakai TE, Backend pakai CL
+TE.TE: Keduanya pakai TE, tapi parsing berbeda
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 SAME-ORIGIN POLICY (SOP)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Definisi : Browser security policy
+           Script di satu origin tidak bisa akses data di origin lain
+
+Origin = scheme + host + port
+
+Contoh:
+https://example.com:443  ← Origin A
+https://example.com:8443 ← Origin B (port beda)
+http://example.com:443   ← Origin C (scheme beda)
+https://api.example.com  ← Origin D (host beda)
+
+Yang di-block SOP:
+✗ XMLHttpRequest / Fetch API ke origin lain
+✗ Read cookies dari origin lain
+✗ Access DOM dari iframe origin lain
+✗ Read localStorage/sessionStorage origin lain
+
+Yang TIDAK di-block:
+✓ Embed images: <img src="https://other.com/pic.jpg">
+✓ Embed scripts: <script src="https://cdn.com/lib.js"></script>
+✓ Embed CSS: <link href="https://other.com/style.css">
+✓ Form submission: <form action="https://other.com">
+✓ Redirect: window.location = "https://other.com"
+
+Bypass SOP (legitimate):
+- CORS headers
+- JSONP (deprecated)
+- PostMessage API
+- document.domain (same-site)
+
+Vulnerability:
+- CORS misconfiguration
+- Postmessage XSS
+- JSONP hijacking
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 WEBSOCKET vs HTTP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HTTP:
+- Request-Response model
+- Stateless
+- Half-duplex (satu arah per waktu)
+- Overhead besar (header tiap request)
+
+WebSocket:
+- Full-duplex (dua arah simultan)
+- Persistent connection
+- Low overhead setelah handshake
+- Real-time communication
+
+WebSocket Handshake (HTTP Upgrade):
+
+Client:
+GET /chat HTTP/1.1
+Host: example.com
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+Sec-WebSocket-Version: 13
+
+Server:
+HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+
+Setelah handshake → persistent connection
+
+Use case:
+- Chat application
+- Live notifications
+- Real-time gaming
+- Stock ticker
+- Collaborative editing
+
+Security concern:
+✓ WebSocket tidak respect SOP
+✓ Harus implement CORS-like origin check
+✓ Vulnerable to CSRF jika tidak ada token validation
+✓ Man-in-the-middle jika tidak pakai WSS (WebSocket Secure)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 RANGKUMAN AKHIR - MIND MAP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HTTP REQUEST:
+├── Request Line: METHOD /path HTTP/version
+├── Headers: Host, User-Agent, Cookie, Content-Type, dll
+├── Blank Line (wajib)
+└── Body (opsional, untuk POST/PUT)
+
+HTTP RESPONSE:
+├── Status Line: HTTP/version CODE Message
+├── Headers: Set-Cookie, Content-Type, Cache-Control, dll
+├── Blank Line (wajib)
+└── Body (HTML, JSON, Image, dll)
+
+SECURITY CHECKLIST:
+├── HTTPS (encryption)
+├── Security Headers (CSP, HSTS, X-Frame-Options)
+├── CORS properly configured
+├── Rate limiting
+├── Session management (secure cookies)
+├── Input validation
+├── Method validation (tidak hanya GET/POST)
+└── Proper authentication & authorization
+
+TESTING TOOLS:
+├── Browser DevTools
+├── Burp Suite
+├── curl / httpie
+├── Postman
+└── Wireshark
+
+COMMON VULNERABILITIES:
+├── CSRF
+├── XSS
+├── Session Hijacking
+├── Open Redirect
+├── SSRF
+├── HTTP Request Smuggling
+├── Header Injection
+├── CORS Misconfiguration
+├── Method Tampering
+└── Cache Poisoning
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
