@@ -191,3 +191,228 @@ X-Content-Type    : tidak ada              nosniff
 Nikto findings    : 3 item                 2 item (false positive)
 Info bocor        : versi + OS             tidak ada
 ```
+
+# Ubuntu Server Home Lab — Reconnaissance & Web Server Hardening
+
+**Date:** 2026-05-20
+**Platform:** Home Lab (VirtualBox)
+**Difficulty:** Beginner
+**Category:** Web / Network
+
+---
+
+## Target
+
+Ubuntu Server VM yang sudah disetup di Fase 1 dengan Nginx web server.
+- IP: 192.168.56.101
+- OS: Ubuntu Server 24.04 LTS
+- Service: Nginx 1.24.0, OpenSSH 9.6p1
+- Attacker: Kali Linux VM (192.168.56.102)
+
+---
+
+## Vulnerability
+
+Tiga misconfiguration ditemukan di web server:
+
+1. **Server Version Disclosure** — Nginx secara default mengumumkan versi software dan OS di setiap response header, memudahkan attacker mencari CVE spesifik untuk versi tersebut.
+2. **Missing X-Frame-Options Header** — Tidak ada proteksi terhadap serangan clickjacking, halaman bisa di-embed di iframe website manapun.
+3. **Missing X-Content-Type-Options Header** — Browser bisa salah interpretasi tipe file yang dikirim server, berpotensi dieksploitasi untuk menjalankan script berbahaya.
+
+---
+
+## Tools Used
+
+- nmap — network scanner, reconnaissance port dan service
+- nikto — web vulnerability scanner
+- curl — HTTP request dari terminal untuk verifikasi headers
+
+---
+
+## Steps
+
+### Step 1 — Verifikasi Koneksi Attacker ke Target
+
+Sebelum mulai reconnaissance, pastikan Kali bisa reach Ubuntu Server. Kedua VM harus berada di jaringan Host-only yang sama (192.168.56.x).
+
+```bash
+ping 192.168.56.101
+```
+
+Output:
+```
+64 bytes from 192.168.56.101: icmp_seq=1 ttl=64 time=2.87 ms
+64 bytes from 192.168.56.101: icmp_seq=2 ttl=64 time=2.74 ms
+4 packets transmitted, 4 received, 0% packet loss
+```
+
+Koneksi berhasil, lanjut ke scanning.
+
+---
+
+### Step 2 — Reconnaissance dengan Nmap
+
+Scan port dan deteksi service yang berjalan di target.
+
+```bash
+nmap -sV -sC -T4 192.168.56.101
+```
+
+Output:
+```
+PORT      STATE   SERVICE  VERSION
+22/tcp    open    ssh      OpenSSH 9.6p1 Ubuntu 3ubuntu13.16
+80/tcp    open    http     nginx 1.24.0 (Ubuntu)
+| http-title: Server Aufa
+| http-server-header: nginx/1.24.0 (Ubuntu)
+8000/tcp  closed  http-alt
+
+MAC Address: 08:00:27:32:4C:05 (Oracle VirtualBox)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Informasi yang berhasil dikumpulkan dari perspektif attacker:
+- Web server: Nginx versi 1.24.0
+- OS: Ubuntu Linux
+- SSH: OpenSSH 9.6p1
+- Title halaman: "Server Aufa"
+- Port 8000 tertutup tapi terdeteksi — ada service lain yang pernah jalan
+
+---
+
+### Step 3 — Vulnerability Scanning dengan Nikto
+
+Scan lebih dalam untuk temukan misconfiguration dan celah umum di web server.
+
+```bash
+nikto -h http://192.168.56.101
+```
+
+Output temuan utama:
+```
++ Server: nginx/1.24.0 (Ubuntu)
++ /: The anti-clickjacking X-Frame-Options header is not present.
++ /: The X-Content-Type-Options header is not set.
++ /#wp-config.php#: file found. This file contains the credentials.
++ 8102 requests: 0 error(s) and 3 item(s) reported
+```
+
+---
+
+### Step 4 — Analisis dan Verifikasi Temuan
+
+Verifikasi temuan nikto secara manual sebelum hardening.
+
+**Verifikasi wp-config.php** — cek apakah file benar-benar ada di server:
+
+```bash
+find /var/www/html -name "*.php*"
+```
+
+Output: kosong, tidak ada hasil.
+
+Kesimpulan: temuan wp-config.php adalah **false positive**. Nikto scan ribuan path secara otomatis dan tidak selalu akurat — verifikasi manual wajib dilakukan.
+
+**Verifikasi headers via curl:**
+
+```bash
+curl -I http://192.168.56.101
+```
+
+Output sebelum hardening:
+```
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Content-Type: text/html
+```
+
+Konfirmasi: versi Nginx dan OS terbaca jelas, security headers tidak ada.
+
+---
+
+### Step 5 — Hardening: Tutup Semua Celah
+
+Edit file konfigurasi utama Nginx:
+
+```bash
+sudo nano /etc/nginx/nginx.conf
+```
+
+Tambahkan tiga baris berikut di dalam blok `http {}`:
+
+```nginx
+server_tokens off;
+add_header X-Frame-Options "SAMEORIGIN";
+add_header X-Content-Type-Options "nosniff";
+```
+
+Test konfigurasi sebelum diterapkan:
+
+```bash
+sudo nginx -t
+```
+
+Output:
+```
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+Reload Nginx untuk terapkan perubahan:
+
+```bash
+sudo systemctl reload nginx
+```
+
+---
+
+### Step 6 — Verifikasi Hasil Hardening
+
+Cek headers setelah hardening:
+
+```bash
+curl -I http://192.168.56.101
+```
+
+Output setelah hardening:
+```
+HTTP/1.1 200 OK
+Server: nginx
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+```
+
+Jalankan nikto ulang untuk konfirmasi:
+
+```bash
+nikto -h http://192.168.56.101
+```
+
+Hasil: temuan turun dari 3 item menjadi 2 item, dan server header sudah tidak menampilkan versi maupun OS.
+
+---
+
+## Hasil Perbandingan Sebelum dan Sesudah Hardening
+
+| | Sebelum | Sesudah |
+|---|---|---|
+| Server header | nginx/1.24.0 (Ubuntu) | nginx |
+| X-Frame-Options | tidak ada | SAMEORIGIN |
+| X-Content-Type-Options | tidak ada | nosniff |
+| Nikto findings | 3 item | 2 item (false positive) |
+
+---
+
+## Lessons Learned
+
+- Reconnaissance dengan nmap bisa mengungkap banyak informasi dari server yang tidak dikonfigurasi dengan benar — versi software, OS, dan service yang berjalan semuanya terbaca jelas
+- Scanner otomatis seperti nikto tidak selalu akurat — verifikasi manual setiap temuan adalah keharusan sebelum menyimpulkan ada celah
+- Security headers adalah lapisan proteksi yang mudah ditambahkan tapi sering diabaikan — tiga baris konfigurasi di nginx.conf sudah menutup beberapa vektor serangan
+- Memahami server dari sisi admin (fase 1) membuat analisis dari sisi attacker (fase 2) jauh lebih bermakna — kamu tahu apa yang dicari karena kamu yang membangunnya
+- `server_tokens off` adalah konfigurasi minimal yang wajib ada di setiap web server production
+
+---
+
+## Next Step
+
+Fase 3 (opsional): Virtual host, reverse proxy, dan SSL/HTTPS untuk melengkapi konfigurasi web server. Lanjut juga ke Metasploitable untuk latihan eksploitasi yang lebih dalam.
