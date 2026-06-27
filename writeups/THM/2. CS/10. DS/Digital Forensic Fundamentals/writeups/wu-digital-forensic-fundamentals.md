@@ -30,7 +30,7 @@ Practical work was performed on a local Kali Linux VM rather than the provided A
 
 The case files were first inspected at the file-manager level to get a baseline (file type, size, and timestamps) before touching them in the terminal — a habit worth keeping since file-manager metadata can sometimes hint at inconsistencies before deeper tools are used.
 
-> 📸 `Digital Forensic Fundamentals\docs\docs hands on\part 5\01-download-task-files.png` 
+> 📸 `C:\Users\USER\Downloads\cyber\cybersec-portfolio\writeups\THM\2. CS\10. DS\Digital Forensic Fundamentals\docs\docs hands on\part 5\01-download-task-files.png` 
 
 A dedicated working directory was created to keep the case files isolated from the rest of the home directory, mirroring the chain-of-custody principle of keeping evidence in a controlled, identifiable location:
 
