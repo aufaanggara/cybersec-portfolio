@@ -30,7 +30,7 @@ Practical work was performed on a local Kali Linux VM rather than the provided A
 
 The case files were first inspected at the file-manager level to get a baseline (file type, size, and timestamps) before touching them in the terminal — a habit worth keeping since file-manager metadata can sometimes hint at inconsistencies before deeper tools are used.
 
-> 📸 ![download task file](../docs/docs%20hands%20on/part%205/01-download-task-files.png)
+> ![download task file](../docs/docs%20hands%20on/part%205/01-download-task-files.png)
 
 A dedicated working directory was created to keep the case files isolated from the rest of the home directory, mirroring the chain-of-custody principle of keeping evidence in a controlled, identifiable location:
 
@@ -63,7 +63,7 @@ sudo apt install poppler-utils -y
 - `sudo apt update` — refreshes the local package index against the Kali mirrors; this resolved an earlier `404 Not Found` error caused by a stale package cache pointing to a `.deb` version no longer hosted on the mirror.
 - `apt install poppler-utils -y` — installs the package providing `pdfinfo`; `-y` auto-confirms the installation prompt.
 
-> 📸 `09-install-poppler-utils.png` ![install poppler utils](../docs/docs%20hands%20on/part%205/04-install-poppler-utils.png)
+> ![install poppler utils](../docs/docs%20hands%20on/part%205/04-install-poppler-utils.png)
 
 With the tool installed, the PDF metadata was read directly:
 
