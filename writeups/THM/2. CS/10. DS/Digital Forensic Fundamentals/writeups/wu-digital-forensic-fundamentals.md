@@ -41,7 +41,7 @@ cd ~/Rooms/introdigitalforensics
 - `mkdir -p` — creates the directory, including any missing parent directories, without erroring if it already exists.
 - `cd` — switches the working directory so subsequent commands operate on the case files directly.
 
-> 📸 `07-buat-direktori-kerja.png`
+> ![masuk direktori kerja kali](../docs/docs%20hands%20on/part%205/02-masuk-direktori-kerja-kali.png)
 
 The case files (provided as a shared VM folder) were moved into the working directory:
 
@@ -50,7 +50,7 @@ mv /media/sf_ShareVM/ransom-lettter-2/* ~/Rooms/introdigitalforensics
 ```
 - `mv` — moves the files; `*` expands to all files inside the source folder, so every case file is relocated in one command.
 
-> 📸 `08-pindahkan-file-ke-direktori-kerja.png`
+> ![pindahkan file ke direktori kerja](../docs/docs%20hands%20on/part%205/03-pindahkan-file-ke-direktori-kerja.png)
 
 **Step 1 — Identify the PDF author.**
 
@@ -63,7 +63,7 @@ sudo apt install poppler-utils -y
 - `sudo apt update` — refreshes the local package index against the Kali mirrors; this resolved an earlier `404 Not Found` error caused by a stale package cache pointing to a `.deb` version no longer hosted on the mirror.
 - `apt install poppler-utils -y` — installs the package providing `pdfinfo`; `-y` auto-confirms the installation prompt.
 
-> 📸 `09-install-poppler-utils.png`
+> 📸 `09-install-poppler-utils.png` ![install poppler utils](../docs/docs%20hands%20on/part%205/04-install-poppler-utils.png)
 
 With the tool installed, the PDF metadata was read directly:
 
@@ -74,7 +74,7 @@ pdfinfo ransom-letter.pdf
 
 The output revealed the document's **Author** field directly in the metadata, despite no author name appearing anywhere in the visible ransom note text — a reminder that document metadata can deanonymize an author even when the visible content is deliberately vague.
 
-> 📸 `10-jalankan-pdfinfo-ransom-letter.png`
+> ![jalankan pdfinfo ransom letter](../docs/docs%20hands%20on/part%205/05-jalankan-pdfinfo-ransom-letter.png)
 
 **Step 2 & 3 — Identify the photo's location (street) and camera model.**
 
@@ -85,7 +85,7 @@ sudo apt install libimage-exiftool-perl
 ```
 - Installs the Perl-based ExifTool package used to read/write metadata in image files.
 
-> 📸 `11-install-libimage-exiftool-perl.png`
+> ![install libimage exiftool perl](../docs/docs%20hands%20on/part%205/06-install-libimage-exiftool-perl.png)
 
 EXIF data was then extracted from the attached photo:
 
@@ -96,11 +96,11 @@ exiftool letter-image.jpg
 
 The first page of output included the **Make** and **Camera Model Name** fields, immediately answering the camera-model question.
 
-> 📸 `12-jalankan-exiftool-letter-image-bagian-1.png`
+> ![jalankan exiftool letter image bagian 1](../docs/docs%20hands%20on/part%205/07-jalankan-exiftool-letter-image-bagian-1.png)
 
 Scrolling further into the output revealed the embedded **GPS Latitude**, **GPS Longitude**, and combined **GPS Position** fields, along with lens details (Lens ID, Focal Length).
 
-> 📸 `13-jalankan-exiftool-letter-image-bagian-2.png`
+> ![jalankan-exiftool-letter-image-bagian-2](../docs/docs%20hands%20on/part%205/08-jalankan-exiftool-letter-image-bagian-2.png)
 
 The raw GPS coordinate format from `exiftool` (`51 deg 30' 51.90" N, 0 deg 5' 38.73" W`) is not directly accepted by most map search bars. It had to be reformatted by replacing `deg` with the degree symbol `°` and removing extra whitespace:
 
@@ -110,11 +110,11 @@ The raw GPS coordinate format from `exiftool` (`51 deg 30' 51.90" N, 0 deg 5' 38
 
 This was searched on Bing Maps, which resolved to a specific address in London:
 
-> 📸 `14-cari-koordinat-gps-di-bing-maps.png`
+> ![cari-koordinat-gps-di-bing-maps](../docs/docs%20hands%20on/part%205/09-cari-koordinat-gps-di-bing-maps.png)
 
 Zooming into the resulting pin on the map confirmed the exact street name where the photo was taken:
 
-> 📸 `15-zoom-lokasi-nama-jalan.png`
+> ![zoom-lokasi-nama-jalan](../docs/docs%20hands%20on/part%205/10-zoom-lokasi-nama-jalan.png)
 
 **Result:**
 
@@ -126,7 +126,7 @@ All three room questions were answered correctly and validated by the platform:
 | Street where the photo was taken | `Milk Street` |
 | Camera model used | `Canon EOS R6` |
 
-> 📸 `16-jawaban-benar-semua-soal.png`
+> ![jawaban benar semua soal](../docs/docs%20hands%20on/part%205/11-jawaban-benar-semua-soal.png)
 
 ---
 
@@ -137,7 +137,7 @@ Q1 (PDF Author):        Ann Gree Shepherd
 Q2 (Street name):       Milk Street
 Q3 (Camera model):      Canon EOS R6
 ```
-> 📸 `16-jawaban-benar-semua-soal.png`
+> ![jawaban benar semua soal](../docs/docs%20hands%20on/part%205/11-jawaban-benar-semua-soal.png)
 
 ---
 
