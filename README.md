@@ -1,72 +1,29 @@
-# Cybersecurity Portfolio — Muhammad Falah Aufa Anggara
+# Cybersecurity Portfolio
 
-> "Don't just study security. Break things, fix things, understand why."
-
-Mahasiswa Universitas Gadjah Mada yang aktif membangun skill di bidang offensive security melalui home lab, CTF, dan platform seperti TryHackMe & HackTheBox.
+Kumpulan writeup dari platform CTF, hands-on lab, dan kursus yang aku kerjakan sebagai bagian dari perjalanan belajar cybersecurity.
 
 ---
 
-## About Me
+## Structure
 
-- Universitas Gadjah Mada
-- Currently learning: Web Hacking, Network Exploitation, Active Directory
-- Building: Home Lab (Kali Linux + Metasploitable + DVWA)
-- Goal: Penetration Tester
-
----
-
-## Skills
-
-| Area | Tools & Techniques |
-|------|--------------------|
-| Web Hacking | SQLi, XSS, File Upload, IDOR, Burp Suite |
-| Network | Nmap, Wireshark, Metasploit |
-| OS / Linux | Privilege Escalation, Bash Scripting |
-| Active Directory | *(coming soon)* |
+```
+cybersec-portfolio/
+├── tryhackme/
+├── linux-labs/
+├── coursera/
+└── README.md
+```
 
 ---
 
 ## Writeups
 
-| Target | Category | Platform | Difficulty |
-|--------|----------|----------|------------|
-| *(more coming soon)* | | | |
+| Folder | Platform | Description |
+|--------|----------|-------------|
+| [tryhackme/](./tryhackme/) | TryHackMe | Room writeups |
+| [linux-labs/](./linux-labs/) | Linux | Hands-on Linux lab writeups |
+| [coursera/](./coursera/) | Coursera | Hands-on lab writeups from courses |
 
 ---
 
-## Achievements
-
-| Platform | Achievement |
-|----------|-------------|
-| TryHackMe | *(comming soon | update with rank/badge)* |
-| HackTheBox | *(comming soon | update with rank)* |
-
----
-
-## Repo Structure
-
-```
-cybersec-portfolio/
-│
-├── README.md
-├── materi/
-│   ├── THM/
-│   ├── HTB/
-│   └── home-lab/
-├── tools/
-└── writeups/
-    ├── THM/
-    ├── HTB/
-    └── home-lab/
-```
-
----
-
-## Contact
-
-- GitHub: [github.com/aufaanggara](https://github.com/aufaanggara)
-- LinkedIn: -
-
----
-
-*Portofolio ini terus diupdate seiring latihan. Every writeup is a proof of work.*
+*Every writeup is a proof of work.*
