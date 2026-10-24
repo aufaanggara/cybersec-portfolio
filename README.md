@@ -1,6 +1,6 @@
 # Cybersecurity Portfolio
 
-Kumpulan writeup dari platform CTF, hands-on lab, dan kursus yang aku kerjakan sebagai bagian dari perjalanan belajar cybersecurity.
+Kumpulan writeup dari platform CTF, hands-on lab, dan kursus yang dikerjakan sebagai bagian dari perjalanan belajar cybersecurity.
 
 ---
 
